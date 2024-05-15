@@ -118,6 +118,17 @@ python -m metricx23.predict \
   --output_file output.jsonl
 ```
 
+Load model in model_parallel to all GPUs
+```bash
+python -m metricx23.predict_model_parallel \
+  --tokenizer google/mt5-xl \
+  --model_name_or_path google/metricx-23-xxl-v2p0 \
+  --max_input_length 1024 \
+  --batch_size 1 \
+  --input_file input.jsonl \
+  --output_file output.jsonl
+```
+
 `input.jsonl` is expected to have 1 serialized JSON object per line with
 `"reference"` and `"hypothesis"` fields. The output jsonl will be parallel
 to `input.jsonl` but additionally contain a `"prediction"` field with the predicted score.
@@ -139,6 +150,17 @@ python -m metricx23.predict \
   --qe
 ```
 
+Load model in model_parallel to all GPUs
+```bash
+python -m metricx23.predict_model_parallel \
+  --tokenizer google/mt5-xl \
+  --model_name_or_path google/metricx-23-qe-xl-v2p0 \
+  --max_input_length 1024 \
+  --batch_size 1 \
+  --input_file input.jsonl \
+  --output_file output.jsonl \
+  --qe
+```
 `input.jsonl` is expected to have 1 serialized JSON object per line with
 `"source"` and `"hypothesis"` fields. The output jsonl will be parallel
 to `input.jsonl` but additionally contain a `"prediction"` field with the predicted score.
