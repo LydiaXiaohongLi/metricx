@@ -18,9 +18,9 @@ def construct_arguments():
     parser.add_argument('--output_follow_input_file_order', default=True, action='store_true')
     parser.add_argument('--output_not_follow_input_file_order', dest='output_follow_input_file_order', action='store_false')
 
-    args.input_files = args.input_files.split(',')
-    args.input_files = args.output_files.split(',')
     args = parser.parse_args()
+    args.input_files = args.input_files.split(',')
+    args.output_files = args.output_files.split(',')
     return args
 
 class JsonlUntokenizedDataset(torch.utils.data.Dataset):
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     for input_file, output_file in zip(args.input_files, args.output_files):
         data_collator = DefaultDataCollator(tokenizer=tokenizer)
-        dataset = JsonlUntokenizedDataset(args.input_file, tokenizer, args.qe, args.max_input_length)
+        dataset = JsonlUntokenizedDataset(input_file, tokenizer, args.qe, args.max_input_length)
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=data_collator, drop_last=False)
         print(f"{datetime.now().strftime('%H:%M:%S')} loaded {len(data_loader)} batches, total {len(dataset)} samples")
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(dataset.data, predictions)]
         if args.output_follow_input_file_order:
             outputs = sorted(outputs, key=lambda x: x["input_file_order"])
-        with open(args.output_file, "w") as f:
+        with open(output_file, "w") as f:
             for o in outputs:
                 json.dump({k:v for k,v in o.items() if k not in ['input','input_ids', "input_file_order"]}, f)
                 f.write("\n")
