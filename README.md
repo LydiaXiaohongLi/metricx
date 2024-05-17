@@ -125,8 +125,8 @@ python -m metricx23.predict_model_parallel \
   --model_name_or_path google/metricx-23-xxl-v2p0 \
   --max_input_length 1024 \
   --batch_size 1 \
-  --input_file input.jsonl \
-  --output_file output.jsonl
+  --input_files input1.jsonl,input2.jsonl \
+  --output_files output1.jsonl,output2.jsonl
 ```
 
 `input.jsonl` is expected to have 1 serialized JSON object per line with
@@ -145,8 +145,8 @@ python -m metricx23.predict \
   --model_name_or_path google/metricx-23-qe-xl-v2p0 \
   --max_input_length 1024 \
   --batch_size 1 \
-  --input_file input.jsonl \
-  --output_file output.jsonl \
+  --input_files input.jsonl \
+  --output_files output.jsonl \
   --qe
 ```
 
@@ -157,8 +157,8 @@ python -m metricx23.predict_model_parallel \
   --model_name_or_path google/metricx-23-qe-xl-v2p0 \
   --max_input_length 1024 \
   --batch_size 1 \
-  --input_file input.jsonl \
-  --output_file output.jsonl \
+  --input_files input1.jsonl,input2.jsonl \
+  --output_files output1.jsonl,output2.jsonl
   --qe
 ```
 `input.jsonl` is expected to have 1 serialized JSON object per line with

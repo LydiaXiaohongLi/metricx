@@ -12,12 +12,14 @@ def construct_arguments():
     parser.add_argument("--model_name_or_path", type=str)
     parser.add_argument("--max_input_length", type=int)
     parser.add_argument("--batch_size", type=int)
-    parser.add_argument("--input_file", type=str)
-    parser.add_argument("--output_file", type=str)
+    parser.add_argument("--input_files", type=str)
+    parser.add_argument("--output_files", type=str)
     parser.add_argument("--qe", action='store_true')
     parser.add_argument('--output_follow_input_file_order', default=True, action='store_true')
     parser.add_argument('--output_not_follow_input_file_order', dest='output_follow_input_file_order', action='store_false')
 
+    args.input_files = args.input_files.split(',')
+    args.input_files = args.output_files.split(',')
     args = parser.parse_args()
     return args
 
@@ -63,24 +65,25 @@ if __name__ == "__main__":
     model.eval()
     print(f"{datetime.now().strftime('%H:%M:%S')} loaded model")
 
-    data_collator = DefaultDataCollator(tokenizer=tokenizer)
-    dataset = JsonlUntokenizedDataset(args.input_file, tokenizer, args.qe, args.max_input_length)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=data_collator, drop_last=False)
-    print(f"{datetime.now().strftime('%H:%M:%S')} loaded {len(data_loader)} batches, total {len(dataset)} samples")
+    for input_file, output_file in zip(args.input_files, args.output_files):
+        data_collator = DefaultDataCollator(tokenizer=tokenizer)
+        dataset = JsonlUntokenizedDataset(args.input_file, tokenizer, args.qe, args.max_input_length)
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, collate_fn=data_collator, drop_last=False)
+        print(f"{datetime.now().strftime('%H:%M:%S')} loaded {len(data_loader)} batches, total {len(dataset)} samples")
 
-    predictions = []
-    for batch in  data_loader:
-        batch_predictions = model(**batch).predictions.detach().cpu().tolist()
-        predictions.extend(batch_predictions)
-    print(f"{datetime.now().strftime('%H:%M:%S')} completed {len(data_loader)} batches, total {len(predictions)} predictions")
+        predictions = []
+        for batch in  data_loader:
+            batch_predictions = model(**batch).predictions.detach().cpu().tolist()
+            predictions.extend(batch_predictions)
+        print(f"{datetime.now().strftime('%H:%M:%S')} completed {len(data_loader)} batches, total {len(predictions)} predictions")
 
-    outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(dataset.data, predictions)]
-    if args.output_follow_input_file_order:
-        outputs = sorted(outputs, key=lambda x: x["input_file_order"])
-    with open(args.output_file, "w") as f:
-        for o in outputs:
-            json.dump({k:v for k,v in o.items() if k not in ['input','input_ids', "input_file_order"]}, f)
-            f.write("\n")
+        outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(dataset.data, predictions)]
+        if args.output_follow_input_file_order:
+            outputs = sorted(outputs, key=lambda x: x["input_file_order"])
+        with open(args.output_file, "w") as f:
+            for o in outputs:
+                json.dump({k:v for k,v in o.items() if k not in ['input','input_ids', "input_file_order"]}, f)
+                f.write("\n")
 
 
 
