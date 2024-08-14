@@ -5,6 +5,8 @@ import torch
 import transformers
 from datetime import datetime
 from dataclasses import dataclass
+import torch
+import time
 
 def construct_arguments():
     parser = argparse.ArgumentParser()
@@ -92,13 +94,15 @@ if __name__ == "__main__":
 
     for input_file, output_file in zip(args.input_files, args.output_files):
         data_loaders = create_dataloaders(input_file, tokenizer, args.qe, args.max_input_length, args.input_lengths, args.batch_sizes)
-        print(f"{datetime.now().strftime('%H:%M:%S')} created {len(data_loaders)} data_loaders")
+        print(f"{datetime.now().strftime('%H:%M:%S')} created {len(data_loaders)} data_loaders with sizes: {[len(data_loader) for data_loader in data_loaders]}")
 
         predictions = []
         for data_loader in data_loaders:
             for batch in data_loader:
+                start_time = time.time()
                 batch_predictions = model(**batch).predictions.detach().cpu().tolist()
                 predictions.extend(batch_predictions)
+                print(f"{datetime.now().strftime('%H:%M:%S')} completed one batch of shape {batch['input_ids'].shape}, gpu utilizations: {[torch.cuda.utilization(device=d) for d in range(torch.cuda.device_count())]}, takes {time.time()-start_time}s")
             print(f"{datetime.now().strftime('%H:%M:%S')} completed {len(data_loader)} batches, total {len(predictions)} predictions")
 
         outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(dataset.data, predictions)]
