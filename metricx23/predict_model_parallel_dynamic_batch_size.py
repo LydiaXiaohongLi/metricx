@@ -58,7 +58,7 @@ def create_dataloaders(path, tokenizer, is_qe, max_input_length, input_lengths, 
 
     if len(current_loader_data)>0:
         dataloaders.append(torch.utils.data.DataLoader(DefaultDataset(current_loader_data), batch_size=args.batch_sizes[current_loader_ind], collate_fn=DefaultDataCollator(tokenizer=tokenizer), drop_last=False))
-    return dataloaders
+    return data, dataloaders
 
 
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     print(f"{datetime.now().strftime('%H:%M:%S')} loaded model")
 
     for input_file, output_file in zip(args.input_files, args.output_files):
-        data_loaders = create_dataloaders(input_file, tokenizer, args.qe, args.max_input_length, args.input_lengths, args.batch_sizes)
+        sorted_data, data_loaders = create_dataloaders(input_file, tokenizer, args.qe, args.max_input_length, args.input_lengths, args.batch_sizes)
         print(f"{datetime.now().strftime('%H:%M:%S')} created {len(data_loaders)} data_loaders with sizes: {[len(data_loader) for data_loader in data_loaders]}")
 
         predictions = []
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 print(f"{datetime.now().strftime('%H:%M:%S')} completed one batch of shape {batch['input_ids'].shape}, gpu utilizations: {[torch.cuda.utilization(device=d) for d in range(torch.cuda.device_count())]}, takes {time.time()-start_time}s")
             print(f"{datetime.now().strftime('%H:%M:%S')} completed {len(data_loader)} batches, total {len(predictions)} predictions")
 
-        outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(dataset.data, predictions)]
+        outputs = [{**{k:v for k,v in example.items()},**{'prediction': pred}} for example, pred in zip(sorted_data, predictions)]
         if args.output_follow_input_file_order:
             outputs = sorted(outputs, key=lambda x: x["input_file_order"])
         with open(output_file, "w") as f:
