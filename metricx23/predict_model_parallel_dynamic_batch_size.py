@@ -1,12 +1,12 @@
 import argparse
 import json
 from metricx23 import models
-import torch
-import transformers
 from datetime import datetime
 from dataclasses import dataclass
-import torch
 import time
+import os
+import torch
+import transformers
 
 def construct_arguments():
     parser = argparse.ArgumentParser()
@@ -18,6 +18,7 @@ def construct_arguments():
     parser.add_argument("--input_files", type=str)
     parser.add_argument("--output_files", type=str)
     parser.add_argument("--qe", action='store_true')
+    parser.add_argument('--overwrite_output', default=False, action='store_true')
     parser.add_argument('--output_follow_input_file_order', default=True, action='store_true')
     parser.add_argument('--output_not_follow_input_file_order', dest='output_follow_input_file_order', action='store_false')
 
@@ -93,6 +94,8 @@ if __name__ == "__main__":
     print(f"{datetime.now().strftime('%H:%M:%S')} loaded model")
 
     for input_file, output_file in zip(args.input_files, args.output_files):
+        if os.path.exists(output_file) and not args.overwrite_output:
+            continue
         sorted_data, data_loaders = create_dataloaders(input_file, tokenizer, args.qe, args.max_input_length, args.input_lengths, args.batch_sizes)
         print(f"{datetime.now().strftime('%H:%M:%S')} created {len(data_loaders)} data_loaders with sizes: {[len(data_loader) for data_loader in data_loaders]}")
 
